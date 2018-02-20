@@ -285,40 +285,51 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 	std::vector<vector3> points;
 	vector3 point;
 
-	vector3 top(0.0f, a_fHeight, 0.0f);
+	vector3 base(0.0f, a_fHeight * -.5, 0.0f);
 
+	//loop through and generate all points for the base of the cone
 	for (float i = 0; i < 360; i += numSub) {
 	
-		point = vector3((0.0f + a_fRadius * cos(i * PI / 180.0f)), 0.0f, (0.0f + a_fRadius * sin(i * PI / 180.0f)));
+		//each point on the base
+		point = vector3((0.0f + a_fRadius * cos(i * PI / 180.0f)), a_fHeight * -.5, (0.0f + a_fRadius * sin(i * PI / 180.0f)));
 
+		//push to array
 		points.push_back(point);
 	
 	}
-	for (int i = points.size() - 1; i > -1; i -= 1) {
 	
+	//loop counterclockwise
+
+	//draw bottom
+	for (int i = points.size() - 1; i > -1; i -= 1) {
+
+		//goes backwards since on bottom
 		if ((i - 1) >= 0) {
 
-			AddTri(points[i], points[i - 1], top);
+			AddTri(points[i - 1], points[i], vector3(0.0f, a_fHeight * -.5, 0.0f));
 
 		}
 		else {
-		
-			AddTri(points[i], points[points.size()-1], top);
-		
+
+			//draw overflow panel, reset to 0.
+			AddTri(points[points.size() - 1], points[i], vector3(0.0f, a_fHeight * -.5, 0.0f));
+
 		}
-	
+
 	}
-	//fix bottom
+	//draw top/sides
+	//go in order since facing upright
 	for (int i = points.size() - 1; i > -1; i -= 1) {
 
 		if ((i - 1) >= 0) {
 
-			AddTri(points[i-1], points[i], vector3(0.0f,0.0f,0.0f));
+			AddTri(points[i], points[i-1], vector3(0.0f, (a_fHeight * .5),0.0f));
 
 		}
 		else {
 
-			AddTri(points[points.size() - 1], points[i], vector3(0.0f, 0.0f, 0.0f));
+			//draw overflow panel, reset to 0.
+			AddTri(points[i], points[points.size() - 1], vector3(0.0f, (a_fHeight * .5), 0.0f));
 
 		}
 
@@ -348,25 +359,29 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	// Replace this with your code
 	//GenerateCube(a_fRadius * 2.0f, a_v3Color);
 	
+	//get number of panels
 	float numSub = 360.0f / a_nSubdivisions;
 
-	std::vector<vector3> pointsT;
-	std::vector<vector3> pointsB;
+	//two arrays, one for top points and one for bottom points(essentailly a 2d vector)
+	std::vector<vector3> pointsT;//top
+	std::vector<vector3> pointsB;//bottom
 	vector3 point;
 	vector3 point2;
 
-	vector3 top(0.0f, a_fHeight, 0.0f);
+	vector3 top(0.0f, a_fHeight * .5, 0.0f);
 
+	//loop through and create all points
 	for (float i = 0; i < 360; i += numSub) {
 
-		point = vector3((0.0f + a_fRadius * cos(i * PI / 180.0f)), 0.0f, (0.0f + a_fRadius * sin(i * PI / 180.0f)));
+		point = vector3((0.0f + a_fRadius * cos(i * PI / 180.0f)), a_fHeight * -.5, (0.0f + a_fRadius * sin(i * PI / 180.0f)));
 
-		point2 = vector3((0.0f + a_fRadius * cos(i * PI / 180.0f)), a_fHeight, (0.0f + a_fRadius * sin(i * PI / 180.0f)));
+		point2 = vector3((0.0f + a_fRadius * cos(i * PI / 180.0f)), a_fHeight * .5, (0.0f + a_fRadius * sin(i * PI / 180.0f)));
 
 		pointsB.push_back(point);
 		pointsT.push_back(point2);
 
 	}
+	//loop through and create all panels
 	for (int i = pointsT.size() - 1; i > -1; i -= 1) {
 
 		if ((i - 1) >= 0) {
@@ -376,26 +391,28 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 		}
 		else {
 	
+			//draw overflow panel, reset to 0.
 			AddQuad(pointsB[i], pointsB[pointsB.size()-1], pointsT[i], pointsT[pointsT.size()-1]);
 
 		}
 
 	}
-
+	//loop through and cover up all tops and bottoms
 	for (int i = pointsT.size() - 1; i > -1; i -= 1) {
 
 		if ((i - 1) >= 0) {
 
 			AddTri(pointsT[i], pointsT[i-1], top);
 
-			AddTri(pointsB[i - 1], pointsB[i], vector3(0.0f, 0.0f, 0.0f));
+			AddTri(pointsB[i - 1], pointsB[i], vector3(0.0f, a_fHeight * -.5, 0.0f));
 
 		}
 		else {
 
+			//draw overflow panel, reset to 0.
 			AddTri(pointsT[i], pointsT[pointsT.size() - 1], top);
 
-			AddTri(pointsB[pointsB.size() - 1], pointsB[i], vector3(0.0f, 0.0f, 0.0f));
+			AddTri(pointsB[pointsB.size() - 1], pointsB[i], vector3(0.0f, a_fHeight * -.5, 0.0f));
 
 		}
 
@@ -434,6 +451,7 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 
 	float numSub = 360.0f / a_nSubdivisions;
 
+	//4 arrays, used for tops, bottoms, and the inner and outer vaules.
 	std::vector<vector3> pointsTI;
 	std::vector<vector3> pointsBI;
 	std::vector<vector3> pointsTO;
@@ -441,55 +459,66 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	vector3 point;
 	vector3 point2;
 
-	vector3 top(0.0f, a_fHeight, 0.0f);
+	vector3 top(0.0f, a_fHeight * .5, 0.0f);
 
+	//outer circle
 	for (float i = 0; i < 360; i += numSub) {
 
-		point = vector3((0.0f + a_fOuterRadius * cos(i * PI / 180.0f)), 0.0f, (0.0f + a_fOuterRadius * sin(i * PI / 180.0f)));
+		//generate bottom values
+		point = vector3((0.0f + a_fOuterRadius * cos(i * PI / 180.0f)), a_fHeight * -.5, (0.0f + a_fOuterRadius * sin(i * PI / 180.0f)));
 
-		point2 = vector3((0.0f + a_fOuterRadius * cos(i * PI / 180.0f)), a_fHeight, (0.0f + a_fOuterRadius * sin(i * PI / 180.0f)));
+		//generate top values
+		point2 = vector3((0.0f + a_fOuterRadius * cos(i * PI / 180.0f)), a_fHeight * .5, (0.0f + a_fOuterRadius * sin(i * PI / 180.0f)));
 
 		pointsBO.push_back(point);
 		pointsTO.push_back(point2);
 
 	}
+	//inner circle
 	for (float i = 0; i < 360; i += numSub) {
 
-		point = vector3((0.0f + a_fInnerRadius * cos(i * PI / 180.0f)), 0.0f, (0.0f + a_fInnerRadius * sin(i * PI / 180.0f)));
+		//generate bottom values
+		point = vector3((0.0f + a_fInnerRadius * cos(i * PI / 180.0f)), a_fHeight * -.5, (0.0f + a_fInnerRadius * sin(i * PI / 180.0f)));
 
-		point2 = vector3((0.0f + a_fInnerRadius * cos(i * PI / 180.0f)), a_fHeight, (0.0f + a_fInnerRadius * sin(i * PI / 180.0f)));
+		//generate top values
+		point2 = vector3((0.0f + a_fInnerRadius * cos(i * PI / 180.0f)), a_fHeight * .5, (0.0f + a_fInnerRadius * sin(i * PI / 180.0f)));
 
 		pointsBI.push_back(point);
 		pointsTI.push_back(point2);
 
 	}
+	//loop thorugh and draw all panels
 	for (int i = pointsTI.size() - 1; i > -1; i -= 1) {
 
 		if ((i - 1) >= 0) {
 
+			//link tops to bottoms
 			AddQuad(pointsBO[i], pointsBO[i - 1], pointsTO[i], pointsTO[i - 1]);
 			AddQuad(pointsTI[i], pointsTI[i - 1], pointsBI[i], pointsBI[i - 1]);
 
 		}
 		else {
 
+			//draw overflow panel, reset to 0.
 			AddQuad(pointsBO[i], pointsBO[pointsBO.size() - 1], pointsTO[i], pointsTO[pointsTO.size() - 1]);
 			AddQuad(pointsTI[i], pointsTI[pointsTI.size() - 1], pointsBI[i], pointsBI[pointsBO.size() - 1]);
 
 		}
 
 	}
-
+	//loop through and draw all tops
 	for (int i = pointsTI.size() - 1; i > -1; i -= 1) {
 
 		if ((i - 1) >= 0) {
 
+			//link all 4 corresponding points on one side || top or bottom
 			AddQuad(pointsBI[i], pointsBI[i - 1], pointsBO[i], pointsBO[i - 1]);
 			AddQuad(pointsTO[i], pointsTO[i - 1], pointsTI[i], pointsTI[i - 1]);
 
 		}
 		else {
 
+			//draw overflow panel, reset to 0.
 			AddQuad(pointsBI[i], pointsBI[pointsBI.size() - 1], pointsBO[i], pointsBO[pointsBO.size() - 1]);
 			AddQuad(pointsTO[i], pointsTO[pointsTO.size() - 1], pointsTI[i], pointsTI[pointsTI.size() - 1]);
 
@@ -552,34 +581,36 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 	Release();
 	Init();
 	
-	float numSubA = 180.0f / a_nSubdivisions;
-	float numSubB = 360.0f / a_nSubdivisions;
+	float numSubA = 180.0f / a_nSubdivisions;//Loop around Z
+	float numSubB = 360.0f / a_nSubdivisions;//Loop around Y
 	//float width = a_fRadius / (a_nSubdivisions/2);
 
 	vector3 top(0.0f, a_fRadius * 2, 0.0f);
 
-	std::vector<std::vector<vector3> > points;
+	std::vector<std::vector<vector3> > points; //all points in the circle
 	//std::vector<vector3> pointsB;
 	vector3 point;
 	//vector3 point2;
 	
-	for (float i = -90; i <= 90; i += numSubA) {
+	///loop through and create all points
+	for (float i = -90; i <= 90; i += numSubA) {//loop around Z axis
 
-		std::vector<vector3> temp;
+		std::vector<vector3> temp;//temp array to store values 
 
-		for (float j = 0; j <= 360; j += numSubB) {
+		for (float j = 0; j <= 360; j += numSubB) {//loop around Y axis
 
+			//generate point
 			point = vector3(
 				a_fRadius * cos(i * PI / 180.0f) *  cos(j * PI / 180.0f),
 				a_fRadius * cos(i * PI / 180.0f) *  sin(j * PI / 180.0f),
 				a_fRadius * sin(i * PI / 180.0f)
 			);
 
-			temp.push_back(point);
+			temp.push_back(point);//add to temp array
 
 		}
 
-		points.push_back(temp);
+		points.push_back(temp);//add to main array
 
 	}
 
@@ -587,10 +618,12 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 
 	// && i != points.size() - 1 && j != points.size() - 1
 
-	for (int i = points.size() - 1; i > -1; i -= 1) {
-		for (int j = points.size() - 1; j > -1; j -= 1) {
+	///looop thorugh the array
+	for (int i = points.size() - 1; i > -1; i -= 1) {//row
+		for (int j = points.size() - 1; j > -1; j -= 1) {//column
 			if ((i - 1) >= 0 && (j - 1) >= 0) {
 
+				//draw panel
 				AddQuad(points[i][j], points[i][j-1], points[i-1][j], points[i-1][j-1]);
 
 				//AddQuad(pointsB[i], pointsB[i - 1], pointsT[i], pointsT[i - 1]);
@@ -599,6 +632,7 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 			}
 			else {
 
+				//draw overflow panel, reset to 0.
 				AddQuad(points[i][j], points[i][0], points[0][j], points[0][0]);
 				//AddQuad(pointsT[i], pointsT[pointsT.size() - 1], pointsB[i], pointsB[pointsB.size() - 1]);
 
